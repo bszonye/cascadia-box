@@ -4,6 +4,9 @@ include <game-box/game.scad>
 
 Qprint = Qfinal;  // or Qdraft
 
+// Cascadia sets come in fives
+Nwild = 5;
+
 // box metrics
 Vgame = [232, 232, 68];  // box interior
 Hwrap = 48;  // cover art wrap ends here, approximately
@@ -11,20 +14,51 @@ Hmanual = 3.0;
 Hceiling = floor(Vgame.z - Hmanual);
 
 // card metrics
-// TODO: put card measurements in library
-Vcard = Vsleeve_orange;  // Gamegenic Tarot
-Hcard = 0.320 + Hsleeve_prime;  // measured ca. 520 microns with sleeves
-Vlcard = Vsleeve_yellow;  // Gamegenic Mini American
-Hlcard = 0.320 + Hsleeve_prime;  // TBD
+// wildlife scoring cards w/Gamegenic Tarot sleeves
+// - 0.510 measured = 0.310 unsleeved (base game)
+// - 0.525          = 0.325           (promos)
+// - 0.580          = 0.380           (expansion)
+// - 0.540          = 0.340           (average)
+Hcard_unsleeved = 0.34;
+Hcard_sleeve = Hsleeve_prime;
+Vcard = Vsleeve_orange;
 Vcard_divider = [75, 125];
 
-// container metrics
-// TODO: leave room for score pads?
-Htray = Hceiling / 2;
-Vtray = [80, 130, Htray];  // wildlife cards
-Vltray = [75, 47, 50];  // landmark cards
+// landmark scoring cards w/Sleeve Kings Mini European sleeves
+// - 0.510 measured = 0.380 unsleeved (expansion)
+Hlcard_unsleeved = 0.38;
+Hlcard_sleeve = Hsleeve_kings;
+Hlcard = Hlcard_unsleeved + Hlcard_sleeve;
+Vlcard = Vsleeve_mini_euro;
 
-module slotted_tray(size=Vtray, height=undef, slots=5, notch=false,
+// container metrics
+Htray = Hceiling / 2;
+// wildlife cards & landmark tokens
+Vtray = [80, 130, Htray];
+// landmark cards
+Vlrack = [
+    Vlcard.y + 2*Rext,  // = 76, round up to 80?
+    Nwild * (ceil(13 * Hlcard) + Dwall) + Dwall,  // = 47, round up to 48/50?
+    Vlcard.x + Hfloor + Rint,  // = 50
+    ];  // landmark cards
+echo(Vlrack=Vlrack);
+
+// colors
+Cgame = "#603000";  // brown
+// wildlife
+Cbear = "#402000";  // dark brown
+Celk = "#e0c080";  // tan
+Csalmon = "#ff0080";  // pink
+Chawk = "#80c0ff";  // azure
+Cfox = "#ff8000";  // orange
+// habitats
+Cmountain = "#808080";  // gray
+Cforest = "#008000";  // dark green
+Cprairie = "#e0c040";  // yellow
+Cwetland = "#80c000";  // green
+Criver = "#0080ff";  // blue
+
+module slotted_tray(size=Vtray, height=undef, slots=Nwild, notch=false,
                     color=undef) {
     // tray with multiple slots and optional notch
     v = volume(size, height);
@@ -50,37 +84,38 @@ module slotted_tray(size=Vtray, height=undef, slots=5, notch=false,
     raise(v.z + Dgap) children();
 }
 
-module wildlife_card_tray(height=Htray, color=undef) {
-    card_tray(height=height, color=color) children();
+module wildlife_card_tray(color=undef) {
+    card_tray(height=Htray+5, color=color) children();
 }
 module landmark_card_tray(color=undef) {
-    slotted_tray(size=Vltray, notch=true, color=color) children();
+    slotted_tray(size=Vlrack, notch=true, color=color) children();
 }
-module landmark_token_tray(height=Htray, color=undef) {
-    slotted_tray(height=height, color=color) children();
+module landmark_token_tray(color=undef) {
+    slotted_tray(height=Htray-5, color=color) children();
 }
 
 module organizer() {
     %box_frame();
     translate([Vgame.x - Vtray.x, Vtray.y - Vgame.y] / 2) {
-        landmark_token_tray(color="#004000")
-        wildlife_card_tray(color="#004000")
+        translate([Vtray.x + 5, 0]) landmark_token_tray(color=Cgame);
+        landmark_token_tray(color=Cgame)
+        wildlife_card_tray(color=Cgame)
             deck(2)
-            tray_divider(color="#ff8000")  // fox
+            tray_divider(color=Cfox)  // fox
             deck(8)
-            tray_divider(color="#80c0ff")  // hawk
+            tray_divider(color=Chawk)  // hawk
             deck(8)
-            tray_divider(color="#ff0080")  // salmon
+            tray_divider(color=Csalmon)  // salmon
             deck(8)
-            tray_divider(color="#e0c080")  // elk
+            tray_divider(color=Celk)  // elk
             deck(8)
-            tray_divider(color="#804000")  // bear
+            tray_divider(color=Cbear)  // bear
             deck(8)
-            tray_divider(color="#004000")  // cover
+            tray_divider(color=Cgame)  // cover
             ;
     }
-    translate([Vgame.x - Vltray.y, Vgame.y - Vltray.x] / 2)
-        rotate(90) landmark_card_tray(color="#004000");
+    translate([Vgame.x - Vlrack.y, Vgame.y - Vlrack.x] / 2)
+        rotate(90) landmark_card_tray(color=Cgame);
 }
 
 organizer();
