@@ -32,16 +32,13 @@ Hlcard = Hlcard_unsleeved + Hlcard_sleeve;
 Vlcard = Vsleeve_mini_euro;
 
 // container metrics
+Hfoot = 0;
 Htray = Hceiling / 2;
 // wildlife cards & landmark tokens
 Vtray = [80, 130, Htray];
 // landmark cards
-Vlrack = [
-    Vlcard.y + 2*Rext,  // = 76, round up to 80?
-    Nwild * (ceil(13 * Hlcard) + Dwall) + Dwall,  // = 47, round up to 48/50?
-    Vlcard.x + Hfloor + Rint,  // = 50
-    ];  // landmark cards
-echo(Vlrack=Vlrack);
+Vbox = [80, 50, 50];
+echo(Vbox=Vbox);
 
 // colors
 Cgame = "#603000";  // brown
@@ -58,47 +55,39 @@ Cprairie = "#e0c040";  // yellow
 Cwetland = "#80c000";  // green
 Criver = "#0080ff";  // blue
 
-module slotted_tray(size=Vtray, height=undef, slots=Nwild, notch=false,
-                    color=undef) {
+module multi_deck_box(size=Vbox, slots=Nwild, div=3/4*Dwall, color=undef) {
     // tray with multiple slots and optional notch
-    v = volume(size, height);
-    cell = [v.x - 2*Dwall, (v.y - Dwall) / slots - Dwall];
+    v = volume(size);
+    cell = [v.x - 2*Dwall, (v.y - 2*Dwall - (slots-1)*div) / slots];
     echo(slots=slots, cell=cell);
     colorize(color) difference() {
         prism(v, r=Rext);
         raise(Hfloor) for (j=[1/2:slots]) {
-            translate([0, v.y/2 - Dwall/2 - j*(cell.y+Dwall)])
+            translate([0, j*(cell.y+div) - v.y/2 + Dwall - div/2])
                 prism(cell, r=Rint);
         }
-        if (notch) {
-            // side cuts
-            hvee = v.z/2;
-            zvee = v.z-hvee;
-            xvee = tround(zvee/sin(Avee));
-            dtop = 2*xvee;
-            vend = [xvee, v.y, zvee];
-            echo(vbox=v, dtop=dtop, zvee=zvee, xvee=xvee);
-            raise(hvee) wall_vee_cut(vend);  // end vee
-        }
+        // side cuts
+        hvee = v.z/2;
+        zvee = v.z-hvee;
+        xvee = tround(zvee/sin(Avee));
+        dtop = 2*xvee;
+        vend = [xvee, v.y, zvee];
+        echo(vbox=v, dtop=dtop, zvee=zvee, xvee=xvee);
+        raise(hvee) wall_vee_cut(vend);  // end vee
     }
     raise(v.z + Dgap) children();
 }
 
 module wildlife_card_tray(color=undef) {
-    card_tray(height=Htray+5, color=color) children();
+    card_tray(height=eceil(Htray, 5), color=color) children();
 }
-module landmark_card_tray(color=undef) {
-    slotted_tray(size=Vlrack, notch=true, color=color) children();
-}
-module landmark_token_tray(color=undef) {
-    slotted_tray(height=Htray-5, color=color) children();
+module landmark_deck_box(color=undef) {
+    multi_deck_box(color=color) children();
 }
 
 module organizer() {
     %box_frame();
     translate([Vgame.x - Vtray.x, Vtray.y - Vgame.y] / 2) {
-        translate([Vtray.x + 5, 0]) landmark_token_tray(color=Cgame);
-        landmark_token_tray(color=Cgame)
         wildlife_card_tray(color=Cgame)
             deck(2)
             tray_divider(color=Cfox)  // fox
@@ -114,15 +103,13 @@ module organizer() {
             tray_divider(color=Cgame)  // cover
             ;
     }
-    translate([Vgame.x - Vlrack.y, Vgame.y - Vlrack.x] / 2)
-        rotate(90) landmark_card_tray(color=Cgame);
+    translate([Vgame.x - Vbox.y, Vgame.y - Vbox.x] / 2)
+        rotate(90) landmark_deck_box(color=Cgame);
 }
 
-organizer();
+*organizer();
 *test_game_shapes($fa=Qdraft);
 
-*tray_foot($fa=Qprint);
 *wildlife_card_tray($fa=Qprint);
-*landmark_card_tray($fa=Qprint);
-*landmark_token_tray($fa=Qprint);
+landmark_deck_box($fa=Qprint);
 *tray_divider($fa=Qprint);
