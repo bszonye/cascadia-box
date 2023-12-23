@@ -47,6 +47,9 @@ Vtray = [80, 130, Htray];
 // landmark deck box
 Vbox = [80, 50, 50];
 echo(Vbox=Vbox);
+// nature token trays
+Vnature = [40, 50, efloor(Hceiling/3, Hflayer)];
+echo(Vnature=Vnature);
 // habitat tile rack & landmark token base
 Vtile = [56, 56, 45];
 Vbase = [60, 60, 15];
@@ -120,26 +123,27 @@ module hex_cut(size, height=undef, cut=Dcut) {
     d = v.y + 2*cut;
     rotate([90, 0, 0]) prism(height=d, center=true) polygon(phex);
 }
-module habitat_tile_rack(color=undef) {
-    v = Vtile;
+module habitat_tile_rack(size=Vtile, color=undef) {
+    v = volume(size);
     shell = area(v);
     well = shell - 2 * area(Dwall);
-    hvee = floor(2/3*v.z);
     colorize(color) difference() {
         prism(shell, height=v.z, r=Rext);
         raise(Hfloor) intersection() {
             prism(well, height=v.z, r=Rint);
             hex_cut([Rhex+Rint, well.x], height=v.z);
         }
-        translate([0, -shell.y/2, hvee]) rotate(90)
-            wall_vee_cut(shell, height=v.z-hvee);
-        translate([0, -well.y/2-Dwall/2, hvee/2])
-            wall_vee_cut([well.x/3, Dwall], height=hvee/2);
+        hvee = floor(v.z / 3);
+        zvee = v.z - hvee;
+        translate([0, -shell.y/2, zvee]) rotate(90)
+            wall_vee_cut(shell, height=hvee);
+        translate([0, -well.y/2-Dwall/2, zvee/2])
+            wall_vee_cut([well.x/3, Dwall], height=zvee/2);
     }
     raise(v.z + Dgap) children();
 }
-module landmark_token_base(color=undef) {
-    v = Vbase;
+module landmark_token_base(size=Vbase, color=undef) {
+    v = volume(size);
     shell = area(v);
     nest = shell - 2 * area(Dnest);
     well = shell - 2 * area(Dbase);
@@ -152,6 +156,17 @@ module landmark_token_base(color=undef) {
         raise(Hfloor) scoop_well(well, h, rint=Rwell, rscoop=scoop, lip=lip);
     }
     raise(v.z - Hnest + Dgap) children();
+}
+module nature_token_tray(size=Vnature, color=undef) {
+    v = volume(size);
+    shell = area(v);
+    well = shell - 2 * area(Dwall);
+    h = v.z - Hfloor;
+    colorize(color) difference() {
+        prism(shell, height=v.z, r=Rext);
+        raise(Hfloor) scoop_well(well, h, lip=h-2*Rext);
+    }
+    raise(v.z + Dgap) children();
 }
 
 module organizer() {
@@ -172,7 +187,11 @@ module organizer() {
             tray_divider(color=Cgame)  // cover
             ;
     }
-    translate([Vgame.x - Vbox.x, Vgame.y - Vbox.y] / 2)
+    translate([Vgame.x/2 - Vnature.x/2, Vgame.y/2 - Vbox.y/2])
+        nature_token_tray(color=Cgame)
+        nature_token_tray(color=Cgame)
+        nature_token_tray(color=Cgame);
+    translate([Vgame.x/2 - Vbox.x/2 - Vnature.x - Dgap, Vgame.y/2 - Vbox.y/2])
         landmark_deck_box(color=Cgame);
     for (i=[0:1]) for (j=[0:2]) {
         origin = [Vgame.x - Vbase.x, Vbase.y - Vgame.y] / 2;
@@ -183,11 +202,12 @@ module organizer() {
     }
 }
 
-*organizer();
+organizer();
 *test_game_shapes($fa=Qdraft);
 
 *wildlife_card_tray($fa=Qprint);
 *landmark_deck_box($fa=Qprint);
 *tray_divider($fa=Qprint);
 *landmark_token_base($fa=Qprint);
-habitat_tile_rack($fa=Qprint);
+*habitat_tile_rack($fa=Qprint);
+*nature_token_tray($fa=Qprint);
