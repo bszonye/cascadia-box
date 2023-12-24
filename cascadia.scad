@@ -41,7 +41,7 @@ Vlcard = Vsleeve_mini_euro;
 
 // container metrics
 Hfoot = 0;
-Htray = Hceiling / 2;
+Htray = eceil(Hceiling / 2, 5);
 // wildlife card tray
 Vtray = [80, 130, Htray];
 // landmark deck box
@@ -104,7 +104,7 @@ module multi_deck_box(size=Vbox, slots=Nwild, div=3/4*Dwall, color=undef) {
 }
 
 module wildlife_card_tray(color=undef) {
-    card_tray(height=eceil(Htray, 5), color=color) children();
+    card_tray(color=color) children();
 }
 module landmark_deck_box(color=undef) {
     multi_deck_box(color=color) children();
@@ -168,10 +168,14 @@ module nature_token_tray(size=Vnature, color=undef) {
     }
     raise(v.z + Dgap) children();
 }
+module start_tile_tray(color=undef) {
+    colorize(color) difference() {
+    }
+}
 
 module organizer() {
     %box_frame();
-    translate([Vtray.x - Vgame.x, Vtray.y - Vgame.y] / 2) {
+    translate([Vgame.x/4, Vtray.y/2 - Vgame.y/2]) {
         wildlife_card_tray(color=Cgame)
             deck(2)
             tray_divider(color=Cfox)  // fox
@@ -186,17 +190,18 @@ module organizer() {
             deck(8)
             tray_divider(color=Cgame)  // cover
             ;
+        raise(Htray+Dgap) start_tile_tray(color=Cgame);
     }
-    translate([Vgame.x/2 - Vnature.x/2, Vgame.y/2 - Vbox.y/2])
+    translate([Vnature.x/2 - Vgame.x/2, Vgame.y/2 - Vbox.y/2])
         nature_token_tray(color=Cgame)
         nature_token_tray(color=Cgame)
         nature_token_tray(color=Cgame);
-    translate([Vgame.x/2 - Vbox.x/2 - Vnature.x - Dgap, Vgame.y/2 - Vbox.y/2])
+    translate([Vbox.x/2 - Vgame.x/2 + Vnature.x + Dgap, Vgame.y/2 - Vbox.y/2])
         landmark_deck_box(color=Cgame);
     for (i=[0:1]) for (j=[0:2]) {
-        origin = [Vgame.x - Vbase.x, Vbase.y - Vgame.y] / 2;
+        origin = [Vbase.x - Vgame.x, Vbase.y - Vgame.y] / 2;
         cnum = 2*j + i;
-        translate(origin + [-i*(Vbase.x+Dgap), j*(Vbase.y+Dgap)])
+        translate(origin + [i*(Vbase.x+Dgap), j*(Vbase.y+Dgap)])
             landmark_token_base(color=Ctile[cnum])
             raise(5*cnum) habitat_tile_rack(color=Ctile[cnum]);
     }
