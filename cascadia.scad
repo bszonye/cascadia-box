@@ -4,8 +4,8 @@ include <game-box/game.scad>
 
 Qprint = Qfinal;  // or Qdraft
 
-// Cascadia sets come in fives
-Nwild = 5;
+Ntypes = 5;  // number of wildlife, habitat, and landmark types
+Nstart = 10;  // number of start tiles
 
 // box metrics
 Vgame = [232, 232, 68];  // box interior
@@ -19,7 +19,9 @@ Vpad1 = [66, 161, Hpad];
 Vpad2 = [87.5, 175, Hpad];
 Hpad_ceiling = Hceiling - Hpad;
 // habitat tiles
-Rhex = 24;  // side length / major radius
+Hboard = 2.5;
+Rhex = 24.4;
+Rhex_single = 24.0;
 
 // card metrics
 // wildlife scoring cards w/Gamegenic Tarot sleeves
@@ -48,7 +50,7 @@ Vtray = [80, 130, Htray];
 Vbox = [80, 50, 50];
 echo(Vbox=Vbox);
 // nature token trays
-Vnature = [40, 50, efloor(Hceiling/3, Hflayer)];
+Vnature = [40, 50, lfloor(Hceiling/3)];
 echo(Vnature=Vnature);
 // habitat tile rack & landmark token base
 Vtile = [56, 56, 45];
@@ -81,7 +83,7 @@ Criver = "#0080ff";  // blue
 Ctile = [Criver, Cmountain, Cwetland, Cforest, Cprairie, Camber];
 
 
-module multi_deck_box(size=Vbox, slots=Nwild, div=3/4*Dwall, color=undef) {
+module multi_deck_box(size=Vbox, slots=Ntypes, div=3/4*Dwall, color=undef) {
     // tray with multiple slots and optional notch
     v = volume(size);
     cell = [v.x - 2*Dwall, (v.y - 2*Dwall - (slots-1)*div) / slots];
@@ -111,19 +113,6 @@ module landmark_deck_box(color=undef) {
     multi_deck_box(color=color) children();
 }
 
-module hex_cut(size, height=undef, cut=Dcut) {
-    a0 = 60;
-    v = volume(size, height);
-    run = a0 < 90 ? 1/tan(a0) : 0;
-    a1 = 90 - a0/2;
-    y1 = v.z;
-    y2 = v.z + cut;
-    x0 = v.x/2;
-    x1 = x0 + y1*run;
-    phex = [[x1, y2], [x1, y1], [x0, 0], [-x0, 0], [-x1, y1], [-x1, y2]];
-    d = v.y + 2*cut;
-    rotate([90, 0, 0]) prism(height=d, center=true) polygon(phex);
-}
 module habitat_tile_rack(size=Vtile, color=undef) {
     v = volume(size);
     shell = area(v);
@@ -132,7 +121,7 @@ module habitat_tile_rack(size=Vtile, color=undef) {
         prism(shell, height=v.z, r=Rext);
         raise(Hfloor) intersection() {
             prism(well, height=v.z, r=Rint);
-            hex_cut([floor(Rhex)+Rint, well.x], height=v.z);
+            hex_cut([round(Rhex_single)+Rint, well.x], height=v.z);
         }
         hvee = floor(v.z / 3);
         zvee = v.z - hvee;
@@ -170,7 +159,13 @@ module nature_token_tray(size=Vnature, color=undef) {
     raise(v.z + Dgap) children();
 }
 module start_tile_tray(color=undef) {
-    colorize(color) difference() {
+    start = [[0.5, 0], [-0.5, 1], [-0.5, 0]];
+    extra = [[0.5, -1]];
+    tiles = concat(start, extra);
+    colorize(color) hex_tray(tiles, Nstart, lip=lceil(3/5*Hboard));
+    %raise() {
+        hex_tile(start, Nstart);
+        hex_tile(extra, Nstart);
     }
 }
 
@@ -191,7 +186,7 @@ module organizer() {
             deck(8)
             tray_divider(color=Cgame)  // cover
             ;
-        raise(Htray+Dgap) start_tile_tray(color=Cgame);
+        raise(Htray+Dgap) start_tile_tray(color=Cforest);
     }
     translate([Vnature.x/2 - Vgame.x/2, Vgame.y/2 - Vbox.y/2])
         nature_token_tray(color=Cforest)
@@ -217,3 +212,4 @@ organizer();
 *landmark_token_base($fa=Qprint);
 *habitat_tile_rack($fa=Qprint);
 *nature_token_tray($fa=Qprint);
+*start_tile_tray($fa=Qprint);
