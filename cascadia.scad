@@ -72,12 +72,13 @@ Cfox = "#ff8000";  // orange
 // habitats
 Csnow = "#c0c0c0";  // light gray
 Cmountain = "#808080";  // gray
-Cforest = "#008000";  // dark green
+Cforest = "#004000";  // dark green
 Cprairie = "#ffe040";  // yellow
+Camber = "#ff8000";  // amber
 Cwetland = "#80c000";  // green
 Criver = "#0080ff";  // blue
 // tile racks
-Ctile = [Cwetland, Cforest, Criver, Cprairie, Cmountain, Csnow];
+Ctile = [Criver, Cmountain, Cwetland, Cforest, Cprairie, Camber];
 
 
 module multi_deck_box(size=Vbox, slots=Nwild, div=3/4*Dwall, color=undef) {
@@ -131,7 +132,7 @@ module habitat_tile_rack(size=Vtile, color=undef) {
         prism(shell, height=v.z, r=Rext);
         raise(Hfloor) intersection() {
             prism(well, height=v.z, r=Rint);
-            hex_cut([Rhex+Rint, well.x], height=v.z);
+            hex_cut([floor(Rhex)+Rint, well.x], height=v.z);
         }
         hvee = floor(v.z / 3);
         zvee = v.z - hvee;
@@ -193,9 +194,9 @@ module organizer() {
         raise(Htray+Dgap) start_tile_tray(color=Cgame);
     }
     translate([Vnature.x/2 - Vgame.x/2, Vgame.y/2 - Vbox.y/2])
-        nature_token_tray(color=Cgame)
-        nature_token_tray(color=Cgame)
-        nature_token_tray(color=Cgame);
+        nature_token_tray(color=Cforest)
+        nature_token_tray(color=Cforest)
+        nature_token_tray(color=Cforest);
     translate([Vbox.x/2 - Vgame.x/2 + Vnature.x + Dgap, Vgame.y/2 - Vbox.y/2])
         landmark_deck_box(color=Cgame);
     for (i=[0:1]) for (j=[0:2]) {
