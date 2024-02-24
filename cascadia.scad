@@ -50,7 +50,7 @@ Vtray = [80, 130, Htray];
 Vbox = [80, 50, 50];
 echo(Vbox=Vbox);
 // nature token trays
-Vnature = [40, 50, lfloor(Hceiling/3)];
+Vnature = [40, 50, 22];
 echo(Vnature=Vnature);
 // habitat tile rack & landmark token base
 Vtile = [56, 56, 45];
@@ -148,21 +148,13 @@ module landmark_token_base(size=Vbase, color=undef) {
     raise(v.z - Hnest + Dgap) children();
 }
 module nature_token_tray(size=Vnature, color=undef) {
-    v = volume(size);
-    shell = area(v);
-    well = shell - 2 * area(Dwall);
-    h = v.z - Hfloor;
-    colorize(color) difference() {
-        prism(shell, height=v.z, r=Rext);
-        raise(Hfloor) scoop_well(well, h, lip=h-2*Rext);
-    }
-    raise(v.z + Dgap) children();
+    box(size, scoop=true, stack=true, color=color) children();
 }
 module start_tile_tray(color=undef) {
     start = [[0.5, 0], [-0.5, 1], [-0.5, 0]];
     extra = [[0.5, -1]];
     tiles = concat(start, extra);
-    colorize(color) hex_tray(tiles, Nstart, lip=lceil(3/5*Hboard));
+    colorize(color) hex_box(tiles, Nstart, hole=true, head=lceil(3/5*Hboard));
     %raise() {
         hex_tile(start, Nstart);
         hex_tile(extra, Nstart);
@@ -203,13 +195,12 @@ module organizer() {
     }
 }
 
-organizer();
-*test_game_shapes($fa=Qdraft);
-
 *wildlife_card_tray($fa=Qprint);
 *landmark_deck_box($fa=Qprint);
 *tray_divider($fa=Qprint);
 *landmark_token_base($fa=Qprint);
 *habitat_tile_rack($fa=Qprint);
-*nature_token_tray($fa=Qprint);
+nature_token_tray($fa=Qprint);
 *start_tile_tray($fa=Qprint);
+
+*organizer();
